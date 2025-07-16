@@ -493,7 +493,8 @@ def make_args():
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/ninad/Datasets/benchmarking",
+        # default="/home/ninad/Datasets/benchmarking",
+        default="/root/Datasets/benchmarking",
         help="Path to parent of model dataset, grasp and scenes dir",
     )
 

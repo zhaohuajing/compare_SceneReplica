@@ -1,0 +1,14 @@
+<launch>
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- Load the robot description and state publisher -->
+  <include file="$(find fetch_bringup)/launch/fetch.launch">
+    <arg name="robot" value="fetch"/>
+  </include>
+
+  <!-- Start MoveIt -->
+  <include file="$(find fetch_moveit_config)/launch/move_group.launch">
+    <arg name="info" value="true"/> <!-- publish grasp markers -->
+  </include>
+</launch>
+

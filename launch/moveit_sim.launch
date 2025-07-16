@@ -5,7 +5,9 @@
 
   <!-- Start MoveIt -->
   <include file="$(find fetch_moveit_config)/launch/move_group.launch" >
+  <!-- <include file="$(find fetch_moveit_config)/launch/demo.launch" > -->
     <arg name="info" value="true"/><!-- publish grasp markers -->
+    <!-- <arg name="fake_execution" default="true"/> -->
   </include>
   
 </launch>

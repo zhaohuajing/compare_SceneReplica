@@ -18,7 +18,7 @@ def make_args():
         "-d",
         "--data_dir",
         type=str,
-        default="/home/benchmark/Datasets/benchmarking/",
+        default="/root/Datasets/benchmarking/",
         help="Path to data dir",
     )
     parser.add_argument(
