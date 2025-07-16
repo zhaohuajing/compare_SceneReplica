@@ -108,6 +108,8 @@ class ObjectService:
         self.object_pose_eul[0:3] = self.object_pose_inq[0:3]
         self.object_pose_eul[3:] = euler_orientation
 
+        print(f"self.object_pose_inq = {self.object_pose_inq}\n self.object_pose_eul = {self.object_pose_eul}\n")
+
     def _ros_pose_as_qt(self, object_pose):
         """
         Get a list of [posn, quat] from a ros pose

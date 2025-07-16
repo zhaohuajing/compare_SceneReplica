@@ -443,7 +443,8 @@ def make_args():
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/benchmark/Datasets/benchmarking/",
+        # default="/home/benchmark/Datasets/benchmarking/",
+        default="/root/Datasets/benchmarking/",
         help="Path to parent of model dataset, grasp and scenes dir",
     )
 
