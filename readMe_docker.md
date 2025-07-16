@@ -104,6 +104,7 @@ python setup_ycb_scene.py --index 161 --datadir /root/Datasets/benchmarking/fina
 
 python bench_model_based_grasping.py --pose_method gazebo --obj_order random --scene_idx 36
 - return: robot moves to self collision pose and stuck there; asked whether to open gripper/continue process
+- 25/07/16 after resolved scene import: able to run
 
 python bench_6dof_segmentation_grasping.py --grasp_method graspnet --seg_method uois --obj_order random --scene_idx 36
 - return: [INFO] [1752617678.367224, 613.172000]: No object segmented
