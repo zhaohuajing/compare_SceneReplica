@@ -102,15 +102,47 @@ python setup_ycb_scene.py --index 161 --datadir /root/Datasets/benchmarking/fina
 
 ------
 
+- run model based grasp manipulation pipeline
+
 python bench_model_based_grasping.py --pose_method gazebo --obj_order random --scene_idx 36
 - return: robot moves to self collision pose and stuck there; asked whether to open gripper/continue process
 - 25/07/16 after resolved scene import: able to run
 
+- run model free options
 python bench_6dof_segmentation_grasping.py --grasp_method graspnet --seg_method uois --obj_order random --scene_idx 36
 - return: [INFO] [1752617678.367224, 613.172000]: No object segmented
 
 -------
 
-spawn object:
+- spawn object:
 root@nerve-desktop-6:~/Datasets/benchmarking/models# rosrun gazebo_ros spawn_model -file /root/Datasets/benchmarking/models/006_mustard_bottle/model.sdf -sdf -model model3 -x 1 -y 1 -z 1 -R 0 -P 0 -Y 0
+
+
+-------
+
+- save docker to image:
+sudo docker commit ros1_node_dev ros1_node_dev_statble_v1
+
+
+- if accidentally deleted docker container and want to create from the saved image snapshot and gpu support:
+
+xhost +local:root  # Allow GUI access from Docker
+
+sudo docker run -it \
+  --gpus all \
+  --name ros1_node_dev \
+  --network=host \
+  -e DISPLAY=$DISPLAY \
+  -e QT_X11_NO_MITSHM=1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v ~/Datasets:/root/Datasets \
+  -v ~/compare_SceneReplica:/root/compare_SceneReplica \
+  ros1_node_dev_stable
+
+
+- check existing dockers:
+sudo docker images
+
+- remove unused images:
+sudo docker rmi ros1_node_dev_statble_v1
 
