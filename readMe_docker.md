@@ -146,3 +146,23 @@ sudo docker images
 - remove unused images:
 sudo docker rmi ros1_node_dev_statble_v1
 
+--------
+
+July 18, 2025 -  Set up Docker container with GPU and X11 support 
+
+- Installed latest NVIDIA driver 575.57.08, Confirmed installation with nvidia-smi
+sudo apt install nvidia-driver-575
+- Verified cuda.h and nvcc
+/usr/local/cuda/include/cuda.h
+nvcc --version → release 12.9
+
+- Verified GPU support inside Docker with:
+sudo docker run --rm --gpus all --runtime=nvidia nvidia/cuda:12.2.0-base-ubuntu20.04 nvidia-smi
+
+- Committed the current container to an image:
+sudo docker commit ros1_node_dev_cuda ros1_node_dev_cuda_backup:2025-07-18
+- Exported the image to a tar archive for backup:
+sudo docker save -o ~/ros1_node_dev_cuda_backup_2025-07-18.tar ros1_node_dev_cuda_backup:2025-07-18
+
+
+
