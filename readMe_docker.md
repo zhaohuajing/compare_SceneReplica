@@ -187,6 +187,12 @@ python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order ran
 - Need to edit shader files (i.e., ycb_render/shaders/vertex_shader.vert) to replace GLSL 4.60 with 1.40, i.e., #version 460 -> #version 140
 
 
-	
+------
+
+- To run graspNet:
+
+cd ~/compare_SceneReplica/src/contact_graspnet 
+conda contact_graspnet_env
+python contact_graspnet/inference.py --np_path=test_data/0.npy  --forward_passes=5  --z_range=[0.2,1.1]
 
 
