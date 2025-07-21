@@ -1,0 +1,33 @@
+#version 140
+uniform sampler2D texUnit;
+in vec2 theCoords;
+in vec3 Normal;
+in vec3 Normal_cam;
+in vec3 FragPos;
+in vec3 Instance_color;
+in vec3 Pos_cam;
+in vec3 Pos_obj;
+
+out vec4 outputColour;
+out vec4 NormalColour;
+out vec4 InstanceColour;
+out vec4 PCObject;
+out vec4 PCColour;
+
+
+uniform vec3 light_position;  // in world coordinate
+uniform vec3 light_color; // light color
+
+void main() {
+    float ambientStrength = 0.2;
+    vec3 ambient = ambientStrength * light_color;
+    vec3 lightDir = normalize(light_position - FragPos);
+    float diff = max(dot(Normal, lightDir), 0.0);
+    vec3 diffuse = diff * light_color;
+
+    outputColour =  texture(texUnit, theCoords) * vec4(diffuse + ambient, 1);
+    NormalColour =  vec4((Normal_cam + 1) / 2,1);
+    InstanceColour = vec4(Instance_color,1);
+    PCObject = vec4(Pos_obj,1);
+    PCColour = vec4(Pos_cam,1);
+}

@@ -104,6 +104,8 @@ python setup_ycb_scene.py --index 161 --datadir /root/Datasets/benchmarking/fina
 
 - run model based grasp manipulation pipeline
 
+python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order random
+
 python bench_model_based_grasping.py --pose_method gazebo --obj_order random --scene_idx 36
 - return: robot moves to self collision pose and stuck there; asked whether to open gripper/continue process
 - 25/07/16 after resolved scene import: able to run
@@ -164,5 +166,27 @@ sudo docker commit ros1_node_dev_cuda ros1_node_dev_cuda_backup:2025-07-18
 - Exported the image to a tar archive for backup:
 sudo docker save -o ~/ros1_node_dev_cuda_backup_2025-07-18.tar ros1_node_dev_cuda_backup:2025-07-18
 
+
+---------
+
+- To run model-base grasping with poseCNN, (likely) need 6 terminals open:
+
+- terminal 1: (~/compare_SceneReplica/launch#)
+roslaunch just_robot.launch
+- terminal 2: (~/compare_SceneReplica/src#)
+python setup_scene_sim.py
+- terminal 3: 
+roslaunch fetch_moveit_config demo.launch
+- terminal 4: (~/compare_SceneReplica/src/PoseCNN-PyTorch-NV-Release#)
+rosrun rviz rviz -d ./ros/posecnn_fetch.rviz
+- terminal 5: (~/compare_SceneReplica/src/PoseCNN-PyTorch-NV-Release#)
+./experiments/scripts/ros_ycb_object_test_fetch.sh 0
+- terminal 6: (~/compare_SceneReplica/src#)
+python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order random
+
+- Need to edit shader files (i.e., ycb_render/shaders/vertex_shader.vert) to replace GLSL 4.60 with 1.40, i.e., #version 460 -> #version 140
+
+
+	
 
 
