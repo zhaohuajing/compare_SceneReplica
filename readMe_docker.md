@@ -184,6 +184,8 @@ rosrun rviz rviz -d ./ros/posecnn_fetch.rviz
 - terminal 6: (~/compare_SceneReplica/src#)
 python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order random
 
+- In Rviz, add MotionPlanning after all 6 terminal's commands are functioning
+
 - Need to edit shader files (i.e., ycb_render/shaders/vertex_shader.vert) to replace GLSL 4.60 with 1.40, i.e., #version 460 -> #version 140
 
 
