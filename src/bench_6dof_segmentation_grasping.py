@@ -768,7 +768,8 @@ if __name__ == "__main__":
             mask_id = bbox_grasp[-1]
             
             pc_scene_cam = get_scene_pc(xyz_image) # scene's pc (N, 3) in camera frame!
-            np.save("/home/ninad/depth_pc_cam.npy", pc_scene_cam)
+            # np.save("/home/ninad/depth_pc_cam.npy", pc_scene_cam)
+            np.save("/root/depth_pc_cam.npy", pc_scene_cam)
             rospy.sleep(3)
             obj_pts_base = get_target_pts(camera_pose, mask_id, label, xyz_image)
             obj_pts_cam = get_target_pts(camera_pose, mask_id, label, xyz_image, frame="camera")

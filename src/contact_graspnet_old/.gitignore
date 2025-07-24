@@ -1,0 +1,11 @@
+test_data
+*.o
+*.so
+*.pkl
+
+results
+checkpoints/*
+*.npz
+**/*.pyc
+**/__pycache__
+.vscode

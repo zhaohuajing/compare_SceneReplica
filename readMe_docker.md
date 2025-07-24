@@ -79,19 +79,6 @@ sudo docker run -it \
   ros1_noetic_gui
 
 
-
-- bringup simulator
-  - (single terminal)
-roscore & gazebo
-  or 
-  - terminal 1:
-sudo docker exec -it ros1_node_dev bash
-roscore
-  - terminal 2
-sudo docker exec -it ros1_node_dev bash
-rviz
-
-
 -------
 
 - inside docker_gui, to run scene_replica:
@@ -194,7 +181,29 @@ python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order ran
 - To run graspNet:
 
 cd ~/compare_SceneReplica/src/contact_graspnet 
-conda contact_graspnet_env
+conda activate contact_graspnet_env
 python contact_graspnet/inference.py --np_path=test_data/0.npy  --forward_passes=5  --z_range=[0.2,1.1]
 
+------
+
+running model-free grasp with uois (unseen object clustering) and contact graspnet:
+- terminal 1: (~/compare_SceneReplica/launch#)
+roslaunch just_robot.launch
+- terminal 2: (~/compare_SceneReplica/src#)
+python setup_scene_sim.py
+- terminal 3: 
+roslaunch fetch_moveit_config demo.launch
+- terminal 4: (~/compare_SceneReplica/src/UnseenObjectClustering#)
+./experiments/scripts/ros_seg_rgbd_add_test_segmentation_realsense.sh 0
+- terminal 5: (~/compare_SceneReplica/src/UnseenObjectClustering#)
+rosrun rviz rviz -d ./ros/segmentation.rviz
+- terminal 6: ((contact_graspnet_env) root@nerve-desktop-6:~/compare_SceneReplica/src/contact_graspnet#) 
+   - frist: 
+  conda activate contact_graspnet_env
+   - THEN:
+  ./run_ros_fetch_experiment.sh
+- terminal 7: (~/compare_SceneReplica/src#)
+python bench_6dof_segmentation_grasping.py --grasp_method contact_gnet --seg_method uois --obj_order random --scene_idx 10
+
+- Need to manually Add robot (MotionPlan) and scene (pointcloud2) to the rviz brought by ./ros/segmentation.rviz
 
