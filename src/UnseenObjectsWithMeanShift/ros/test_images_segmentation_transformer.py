@@ -21,12 +21,15 @@ import pprint
 import time, os, sys
 import os.path as osp
 import numpy as np
+if not hasattr(np, 'float'):
+    np.float = float
 import _init_paths
 import networks
 import rospy
 import ros_numpy
 import copy
 import scipy.io
+
 
 from utils.blob import pad_im
 from sensor_msgs.msg import Image, CameraInfo

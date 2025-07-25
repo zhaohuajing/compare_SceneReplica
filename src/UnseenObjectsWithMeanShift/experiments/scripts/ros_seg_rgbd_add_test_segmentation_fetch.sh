@@ -6,7 +6,8 @@ set -e
 export PYTHONUNBUFFERED="True"
 export CUDA_VISIBLE_DEVICES=$1
 
-outdir="output/tabletop_object/tabletop_object_train"
+# outdir="output/tabletop_object/tabletop_object_train"
+outdir="data/checkpoints"
 
 ./ros/test_images_segmentation.py --gpu $1 \
   --network seg_resnet34_8s_embedding \

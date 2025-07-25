@@ -205,5 +205,30 @@ rosrun rviz rviz -d ./ros/segmentation.rviz
 - terminal 7: (~/compare_SceneReplica/src#)
 python bench_6dof_segmentation_grasping.py --grasp_method contact_gnet --seg_method uois --obj_order random --scene_idx 10
 
-- Need to manually Add robot (MotionPlan) and scene (pointcloud2) to the rviz brought by ./ros/segmentation.rviz
+- Need to manually Add robot (MotionPlan) and scene (pointcloud2) to the rviz window brought by ./ros/segmentation.rviz
 
+-------
+
+run model-free grasp with MSMFormer (UnseenObjectsWithMeanShift) and contact graspnet:
+- terminal 1: (~/compare_SceneReplica/launch#)
+roslaunch just_robot.launch
+- terminal 2: (~/compare_SceneReplica/src#)
+python setup_scene_sim.py
+- terminal 3: 
+roslaunch fetch_moveit_config demo.launch
+- terminal 4: [not using conda env] (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
+   - option 1:
+   ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_realsense.sh 0
+   - option 2:
+   ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_fetch.sh 0
+- terminal 5: (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
+rosrun rviz rviz -d ./ros/segmentation.rviz
+- terminal 6: ((contact_graspnet_env) root@nerve-desktop-6:~/compare_SceneReplica/src/contact_graspnet#) 
+   - frist: 
+  conda activate contact_graspnet_env
+   - THEN:
+  ./run_ros_fetch_experiment.sh
+- terminal 7: (~/compare_SceneReplica/src#)
+python bench_6dof_segmentation_grasping.py --grasp_method contact_gnet --seg_method msmformer --obj_order random --scene_idx 10
+
+- output: No errors; loading, segmentation, and contact_graspnet all work; obects being detected and segmented, rostopics of /seg_labels and /seg_image are publishing messages; yet bench_6dof_segmentation_grasping returns [INFO] No object segmented
