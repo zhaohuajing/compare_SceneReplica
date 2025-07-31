@@ -780,7 +780,7 @@ src/UnseenObjectsWithMeanShift/MSMFormer/meanshiftformer/modeling/pixel_decoder/
 -------
 
 - check cuda memory dynamically:
-watch -n 1 nvidia-smi
+ 
 
 -------
 
@@ -1242,4 +1242,104 @@ Hint: If you want to see a list of allocated tensors when OOM happens, add repor
 0 derived errors ignored.
 
 ^C^C[INFO] Exiting Contact GraspNet generation ROS Node
+
+
+
+
+-------
+
+Added cuda default dtype setup from test_cuda_torch_sam to: MSMFormer/meanshiftformer/modeling/pixel_decoder/msdeformattn.py:
+
+import os
+import gc
+
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:256"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:False"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "roundup_power2_divisions:256" # 17.17 vs 24.00 vs 20.00 vs 18.00
+
+print("PyTorch version:", torch.__version__)
+print("Torchvision version:", torchvision.__version__)
+print("CUDA is available:", torch.cuda.is_available())
+
+torch.cuda.memory._record_memory_history()
+gc.collect() # collect garbage
+torch.cuda.empty_cache()
+
+FLOAT_PRECISION = "float16"  # bfloat16 is recommended for training and inference on GPUs with Ampere architecture or later
+
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+print("Using device:", device)
+if device.type == "cuda":
+    # colab has everything on bfloat16
+    if FLOAT_PRECISION == "bfloat16":
+        torch.set_default_dtype(torch.bfloat16)
+        print("Using bfloat16 precision")
+    elif FLOAT_PRECISION == "float32":
+        torch.set_default_dtype(torch.float32)
+        print("Using float32 precision")
+    elif FLOAT_PRECISION == "float16":
+        torch.set_default_dtype(torch.float16)
+        print("Using float16 precision")
+    else:
+        raise ValueError("Unsupported FLOAT_PRECISION: {}".format(FLOAT_PRECISION))
+
+    # turn on tfloat32 for Ampere GPUs (https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices)
+    if torch.cuda.get_device_properties(0).major >= 8:
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+elif device.type == "cpu":
+    # turn on bfloat16 for CPU
+    torch.set_float32_matmul_precision("high")
+    torch.set_default_dtype(torch.bfloat16)
+else:
+    raise RuntimeError("Unsupported device type: {}".format(device.type))
+
+-----
+
+Output:
+Traceback (most recent call last):
+  File "./ros/test_images_segmentation_transformer.py", line 343, in <module>
+    listener.run_network()
+  File "./ros/test_images_segmentation_transformer.py", line 180, in run_network
+    out_label, out_label_refined, out_score, bbox = test_sample_crop_nolabel(self.cfg_transformer, sample, self.predictor, self.predictor_crop, visualization=False, topk=False, confident_score=0.2, print_result=True)
+  File "/root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/fcn/test_utils.py", line 356, in test_sample_crop_nolabel
+    outputs = predictor(sample)
+  File "/root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/fcn/test_utils.py", line 165, in __call__
+    predictions = self.model([sample])[0]
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/fcn/../../MSMFormer/meanshiftformer/pretrained_meanshiftformer_model.py", line 291, in forward
+    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor) #.detach() # if use detach(), backbone is not trained
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/networks/SEG.py", line 105, in forward
+    features = self.fcn(img)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/networks/resnet_dilated.py", line 323, in forward
+    x = self.resnet34_8s(x)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/networks/resnet.py", line 237, in forward
+    x = self.conv1(x)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/conv.py", line 458, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/conv.py", line 454, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.cuda.HalfTensor) should be the same
 

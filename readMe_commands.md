@@ -49,9 +49,8 @@ Run sceneReplica modules
 * with different options of pose-estimation, perception-segmentation, and grasp loading/planning
 
 --------
-
 - To run model-based grasping with gazebo option:
-
+--------
   - terminal 1: (~/compare_SceneReplica/launch#)
 roslaunch just_robot.launch
   - terminal 2: (~/compare_SceneReplica/src#)
@@ -62,9 +61,8 @@ roslaunch fetch_moveit_config demo.launch
 python bench_model_based_grasping.py -s 10 --pose_method gazebo --obj_order random
 
 ---------
-
-- To run model-base grasping with poseCNN, (likely) need 6 terminals open:
-
+- TO run model-base grasping with poseCNN, (likely) need 6 terminals open:
+---------
   - terminal 1: (~/compare_SceneReplica/launch#)
 roslaunch just_robot.launch
   - terminal 2: (~/compare_SceneReplica/src#)
@@ -84,16 +82,15 @@ python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order ran
 
 
 ------
-
 - To run graspNet:
-
+------
 cd ~/compare_SceneReplica/src/contact_graspnet 
 conda activate contact_graspnet_env
 python contact_graspnet/inference.py --np_path=test_data/0.npy  --forward_passes=5  --z_range=[0.2,1.1]
 
 ------
-
-- running model-free grasp with uois (unseen object clustering) and contact_graspnet:
+- To run model-free grasp with uois (unseen object clustering) and contact_graspnet:
+------
   - terminal 1: (~/compare_SceneReplica/launch#)
 roslaunch just_robot.launch
   - terminal 2: (~/compare_SceneReplica/src#)
@@ -115,26 +112,26 @@ python bench_6dof_segmentation_grasping.py --grasp_method contact_gnet --seg_met
 - Need to manually Add robot (MotionPlan) and scene (pointcloud2) to the rviz window brought by ./ros/segmentation.rviz
 
 -------
-
-run model-free grasp with MSMFormer (UnseenObjectsWithMeanShift) and contact_graspnet:
+- To run model-free grasp with MSMFormer (UnseenObjectsWithMeanShift) and contact_graspnet:
+--------
   - terminal 1: (~/compare_SceneReplica/launch#)
 roslaunch just_robot.launch
   - terminal 2: (~/compare_SceneReplica/src#)
 python setup_scene_sim.py
   - terminal 3: 
 roslaunch fetch_moveit_config demo.launch
-  - terminal 4: [not using conda env/ using msmformer_seg_env] (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
-   - option 1:
-   ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_realsense.sh 0
-   - option 2:
-   ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_fetch.sh 0
-  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#) [optional too?]
+  - terminal 4: [may use msmformer_seg_env] (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
+   - first:
+conda activate msmformer_seg_env
+   - then: [from sceneReplica readme]
+./experiments/scripts/ros_seg_transformer_test_segmentation_fetch.sh 0
+  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#) [optional]
 rosrun rviz rviz -d ./ros/segmentation.rviz
   - terminal 6: ((contact_graspnet_env) root@nerve-desktop-6:~/compare_SceneReplica/src/contact_graspnet#) 
    - frist: 
-   conda activate contact_graspnet_env
+conda activate contact_graspnet_env
    - THEN:
-  ./run_ros_fetch_experiment.sh
+./run_ros_fetch_experiment.sh
   - terminal 7: (~/compare_SceneReplica/src#)
 python bench_6dof_segmentation_grasping.py --grasp_method contact_gnet --seg_method msmformer --obj_order random --scene_idx 10
 
