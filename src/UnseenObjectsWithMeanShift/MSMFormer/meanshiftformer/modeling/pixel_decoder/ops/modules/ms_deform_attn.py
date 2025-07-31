@@ -9,6 +9,9 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 # Modified by Bowen Cheng from https://github.com/fundamentalvision/Deformable-DETR
 
+# NOTE from Zhao 25/07/31: Modified all dtype=torch.float32 to dtype=torch.float16 in an attempt to debug cuda outof memory issue
+
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
@@ -65,7 +68,7 @@ class MSDeformAttn(nn.Module):
 
     def _reset_parameters(self):
         constant_(self.sampling_offsets.weight.data, 0.)
-        thetas = torch.arange(self.n_heads, dtype=torch.float32) * (2.0 * math.pi / self.n_heads)
+        thetas = torch.arange(self.n_heads, dtype=torch.float16) * (2.0 * math.pi / self.n_heads)
         grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
         grid_init = (grid_init / grid_init.abs().max(-1, keepdim=True)[0]).view(self.n_heads, 1, 1, 2).repeat(1, self.n_levels, self.n_points, 1)
         for i in range(self.n_points):

@@ -3,6 +3,8 @@
 set -x
 set -e
 
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True # 25/07/31: added to resolve cuda out of memory issue
+
 export PYTHONUNBUFFERED="True"
 export CUDA_VISIBLE_DEVICES=$1
 

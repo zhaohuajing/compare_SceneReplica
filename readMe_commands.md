@@ -7,7 +7,7 @@ python setup_ycb_scene.py --index 161 --datadir /root/Datasets/benchmarking/fina
 
 ------
 
-- run model based grasp manipulation pipeline
+- run model based grasp manipulation pipeline (25/07/14)
 
 python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order random
 
@@ -24,11 +24,8 @@ python bench_6dof_segmentation_grasping.py --grasp_method graspnet --seg_method 
 - spawn object:
 root@nerve-desktop-6:~/Datasets/benchmarking/models# rosrun gazebo_ros spawn_model -file /root/Datasets/benchmarking/models/006_mustard_bottle/model.sdf -sdf -model model3 -x 1 -y 1 -z 1 -R 0 -P 0 -Y 0
 
-
-
 - Print TF Tree in Command Line
 rosrun tf view_frames
-
 
 ------
 
@@ -44,7 +41,6 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 3. Clear GPU memory manually in script
 import torch
 torch.cuda.empty_cache()
-
 
 ---------
 Run sceneReplica modules  
@@ -64,7 +60,6 @@ python setup_scene_sim.py
 roslaunch fetch_moveit_config demo.launch
   - terminal 4: (~/compare_SceneReplica/src#)
 python bench_model_based_grasping.py -s 10 --pose_method gazebo --obj_order random
-
 
 ---------
 
@@ -107,7 +102,7 @@ python setup_scene_sim.py
 roslaunch fetch_moveit_config demo.launch
   - terminal 4: (~/compare_SceneReplica/src/UnseenObjectClustering#)
 ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_realsense.sh 0
-  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectClustering#)
+  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectClustering#) [optional! Can skip to save cuda memeory]
 rosrun rviz rviz -d ./ros/segmentation.rviz
   - terminal 6: ((contact_graspnet_env) root@nerve-desktop-6:~/compare_SceneReplica/src/contact_graspnet#) 
    - frist: 
@@ -128,12 +123,12 @@ roslaunch just_robot.launch
 python setup_scene_sim.py
   - terminal 3: 
 roslaunch fetch_moveit_config demo.launch
-  - terminal 4: [not using conda env] (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
+  - terminal 4: [not using conda env/ using msmformer_seg_env] (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
    - option 1:
    ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_realsense.sh 0
    - option 2:
    ./experiments/scripts/ros_seg_rgbd_add_test_segmentation_fetch.sh 0
-  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#)
+  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectsWithMeanShift#) [optional too?]
 rosrun rviz rviz -d ./ros/segmentation.rviz
   - terminal 6: ((contact_graspnet_env) root@nerve-desktop-6:~/compare_SceneReplica/src/contact_graspnet#) 
    - frist: 

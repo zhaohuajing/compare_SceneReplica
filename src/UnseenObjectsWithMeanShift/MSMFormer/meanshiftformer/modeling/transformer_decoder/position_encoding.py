@@ -8,6 +8,8 @@ import math
 import torch
 from torch import nn
 
+# NOTE from Zhao 25/07/31: Modified all dtype=torch.float32 to dtype=torch.float16 in an attempt to debug cuda outof memory issue
+
 
 class PositionEmbeddingSine(nn.Module):
     """
@@ -30,14 +32,14 @@ class PositionEmbeddingSine(nn.Module):
         if mask is None:
             mask = torch.zeros((x.size(0), x.size(2), x.size(3)), device=x.device, dtype=torch.bool)
         not_mask = ~mask
-        y_embed = not_mask.cumsum(1, dtype=torch.float32)
-        x_embed = not_mask.cumsum(2, dtype=torch.float32)
+        y_embed = not_mask.cumsum(1, dtype=torch.float16)
+        x_embed = not_mask.cumsum(2, dtype=torch.float16)
         if self.normalize:
             eps = 1e-6
             y_embed = y_embed / (y_embed[:, -1:, :] + eps) * self.scale
             x_embed = x_embed / (x_embed[:, :, -1:] + eps) * self.scale
 
-        dim_t = torch.arange(self.num_pos_feats, dtype=torch.float32, device=x.device)
+        dim_t = torch.arange(self.num_pos_feats, dtype=torch.float16, device=x.device)
         dim_t = self.temperature ** (2 * (dim_t // 2) / self.num_pos_feats)
 
         pos_x = x_embed[:, :, :, None] / dim_t
