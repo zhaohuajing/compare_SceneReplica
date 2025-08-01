@@ -11,7 +11,7 @@ from torch.nn.init import xavier_uniform_, constant_, uniform_, normal_
 from torch.cuda.amp import autocast
 
 
-# added modules start: must occur BEFORE cuda allocations (Added 25/07/31)
+# # added modules start: must occur BEFORE cuda allocations (Added 25/07/31)
 
 
 import os
@@ -33,40 +33,40 @@ gc.collect() # collect garbage
 torch.cuda.empty_cache()
 
 
-FLOAT_PRECISION = "float16"  # bfloat16 is recommended for training and inference on GPUs with Ampere architecture or later
+# FLOAT_PRECISION = "float16"  # bfloat16 is recommended for training and inference on GPUs with Ampere architecture or later
 
 
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-else:
-    device = torch.device("cpu")
-print("Using device:", device)
-if device.type == "cuda":
-    # colab has everything on bfloat16
-    if FLOAT_PRECISION == "bfloat16":
-        torch.set_default_dtype(torch.bfloat16)
-        print("Using bfloat16 precision")
-    elif FLOAT_PRECISION == "float32":
-        torch.set_default_dtype(torch.float32)
-        print("Using float32 precision")
-    elif FLOAT_PRECISION == "float16":
-        torch.set_default_dtype(torch.float16)
-        print("Using float16 precision")
-    else:
-        raise ValueError("Unsupported FLOAT_PRECISION: {}".format(FLOAT_PRECISION))
+# if torch.cuda.is_available():
+#     device = torch.device("cuda")
+# else:
+#     device = torch.device("cpu")
+# print("Using device:", device)
+# if device.type == "cuda":
+#     # colab has everything on bfloat16
+#     if FLOAT_PRECISION == "bfloat16":
+#         torch.set_default_dtype(torch.bfloat16)
+#         print("Using bfloat16 precision")
+#     elif FLOAT_PRECISION == "float32":
+#         torch.set_default_dtype(torch.float32)
+#         print("Using float32 precision")
+#     elif FLOAT_PRECISION == "float16":
+#         torch.set_default_dtype(torch.float16)
+#         print("Using float16 precision")
+#     else:
+#         raise ValueError("Unsupported FLOAT_PRECISION: {}".format(FLOAT_PRECISION))
 
-    # turn on tfloat32 for Ampere GPUs (https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices)
-    if torch.cuda.get_device_properties(0).major >= 8:
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cudnn.allow_tf32 = True
-elif device.type == "cpu":
-    # turn on bfloat16 for CPU
-    torch.set_float32_matmul_precision("high")
-    torch.set_default_dtype(torch.bfloat16)
-else:
-    raise RuntimeError("Unsupported device type: {}".format(device.type))
+#     # turn on tfloat32 for Ampere GPUs (https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices)
+#     if torch.cuda.get_device_properties(0).major >= 8:
+#         torch.backends.cuda.matmul.allow_tf32 = True
+#         torch.backends.cudnn.allow_tf32 = True
+# elif device.type == "cpu":
+#     # turn on bfloat16 for CPU
+#     torch.set_float32_matmul_precision("high")
+#     torch.set_default_dtype(torch.bfloat16)
+# else:
+#     raise RuntimeError("Unsupported device type: {}".format(device.type))
 
-# added modules end
+# # added modules end
 
 from detectron2.config import configurable
 from detectron2.layers import Conv2d, ShapeSpec, get_norm
@@ -371,7 +371,8 @@ class MSDeformAttnPixelDecoder(nn.Module):
         ret["common_stride"] = cfg.MODEL.SEM_SEG_HEAD.COMMON_STRIDE
         return ret
 
-    @autocast(enabled=False)
+    # @autocast(enabled=False)
+    @autocast(enabled=True)
     def forward_features(self, features):
         srcs = []
         pos = []

@@ -13,6 +13,59 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+# # 25/08/01: Added lines for image float constrains in an attempt to resolve cuda out of memory issue
+
+# import os
+# import gc
+# import torchvision
+
+
+# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:256"
+# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:False"
+# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "roundup_power2_divisions:256" # 17.17 vs 24.00 vs 20.00 vs 18.00
+
+# print("PyTorch version:", torch.__version__)
+# print("Torchvision version:", torchvision.__version__)
+# print("CUDA is available:", torch.cuda.is_available())
+
+# torch.cuda.memory._record_memory_history()
+# gc.collect() # collect garbage
+# torch.cuda.empty_cache()
+
+# FLOAT_PRECISION = "float16"  # bfloat16 is recommended for training and inference on GPUs with Ampere architecture or later
+
+# if torch.cuda.is_available():
+#     device = torch.device("cuda")
+# else:
+#     device = torch.device("cpu")
+# print("Using device:", device)
+# if device.type == "cuda":
+#     # colab has everything on bfloat16
+#     if FLOAT_PRECISION == "bfloat16":
+#         torch.set_default_dtype(torch.bfloat16)
+#         print("Using bfloat16 precision")
+#     elif FLOAT_PRECISION == "float32":
+#         torch.set_default_dtype(torch.float32)
+#         print("Using float32 precision")
+#     elif FLOAT_PRECISION == "float16":
+#         torch.set_default_dtype(torch.float16)
+#         print("Using float16 precision")
+#     else:
+#         raise ValueError("Unsupported FLOAT_PRECISION: {}".format(FLOAT_PRECISION))
+
+#     # turn on tfloat32 for Ampere GPUs (https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices)
+#     if torch.cuda.get_device_properties(0).major >= 8:
+#         torch.backends.cuda.matmul.allow_tf32 = True
+#         torch.backends.cudnn.allow_tf32 = True
+# elif device.type == "cpu":
+#     # turn on bfloat16 for CPU
+#     torch.set_float32_matmul_precision("high")
+#     torch.set_default_dtype(torch.bfloat16)
+# else:
+#     raise RuntimeError("Unsupported device type: {}".format(device.type))
+
+# # added lines end
+
 from detectron2.config import configurable
 from detectron2.data import MetadataCatalog
 from detectron2.modeling import META_ARCH_REGISTRY, build_backbone, build_sem_seg_head

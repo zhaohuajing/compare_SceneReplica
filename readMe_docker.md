@@ -29,6 +29,7 @@ sudo docker run -it \
   ros1_noetic_gui
   
 ------------
+------------
 
 - start only:
 xhost +local:root
@@ -38,7 +39,7 @@ sudo docker start -ai ros1_node_dev
 xhost +local:root
 sudo docker exec -it ros1_node_dev bash
 
-
+------------
 ------------
 
 NOTE: DO NOT USE "sudo docker run -it --rm \" if you do not want to remove the existing image and start from scratch
