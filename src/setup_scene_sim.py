@@ -18,7 +18,8 @@ def make_args():
         "-d",
         "--data_dir",
         type=str,
-        default="/root/Datasets/benchmarking/",
+        # default="/root/Datasets/benchmarking/",
+        default="/home/csrobot/Datasets/benchmarking/",
         help="Path to data dir",
     )
     parser.add_argument(

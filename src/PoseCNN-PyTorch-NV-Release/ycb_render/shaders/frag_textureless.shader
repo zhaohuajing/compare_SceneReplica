@@ -1,4 +1,4 @@
-#version 140
+#version 460
 in vec3 theColor;
 in vec3 Normal;
 in vec3 Normal_cam;
@@ -8,11 +8,11 @@ in vec3 Pos_cam;
 in vec3 Pos_obj;
 in float inverse_normal;
 
-out vec4 outputColour;
-out vec4 NormalColour;
-out vec4 InstanceColour;
-out vec4 PCObject;
-out vec4 PCColour;
+layout (location = 0) out vec4 outputColour;
+layout (location = 1) out vec4 NormalColour;
+layout (location = 2) out vec4 InstanceColour;
+layout (location = 3) out vec4 PCObject;
+layout (location = 4) out vec4 PCColour;
 
 uniform vec3 light_position;  // in world coordinate
 uniform vec3 light_color; // light color

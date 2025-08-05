@@ -7,8 +7,6 @@ import glutils.glcontext as glcontext
 import OpenGL.GL as GL
 import cv2
 import numpy as np
-# Added 25/07/21
-np.bool = np.bool_
 import platform
 PYTHON2 = True
 if platform.python_version().startswith('3'):
@@ -82,10 +80,7 @@ class YCBRenderer:
         #else:
         self._offset_map = None
 
-        # 25/07/20: below added for debugging
-        print(f"get_available_devices() = {get_available_devices()}")  # Add before the line that crashes
-        # self.r = CppYCBRenderer.CppYCBRenderer(width, height, get_available_devices()[gpu_id])
-        self.r = CppYCBRenderer.CppYCBRenderer(width, height, 0)
+        self.r = CppYCBRenderer.CppYCBRenderer(width, height, get_available_devices()[gpu_id])
         self.r.init()
         self.glstring = GL.glGetString(GL.GL_VERSION)
         from OpenGL.GL import shaders

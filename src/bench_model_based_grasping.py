@@ -444,7 +444,8 @@ def make_args():
         "--data_dir",
         type=str,
         # default="/home/benchmark/Datasets/benchmarking/",
-        default="/root/Datasets/benchmarking/",
+        # default="/root/Datasets/benchmarking/",
+        default="/home/csrobot/Datasets/benchmarking/",
         help="Path to parent of model dataset, grasp and scenes dir",
     )
 
