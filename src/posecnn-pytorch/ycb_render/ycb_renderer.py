@@ -80,7 +80,20 @@ class YCBRenderer:
         #else:
         self._offset_map = None
 
-        self.r = CppYCBRenderer.CppYCBRenderer(width, height, get_available_devices()[gpu_id])
+        print("Available devices:", get_available_devices())
+
+        # Modified 25/08/04 for unrecognized gpu 
+        # self.r = CppYCBRenderer.CppYCBRenderer(width, height, get_available_devices()[gpu_id])
+
+        available_devices = get_available_devices()
+        print("Available devices (override):", available_devices)
+        if not available_devices:
+            device = 0  # Fallback to GPU 0 if no device is detected
+        else:
+            device = available_devices[gpu_id]
+        self.r = CppYCBRenderer.CppYCBRenderer(width, height, device)
+        # mofigied lines end
+
         self.r.init()
         self.glstring = GL.glGetString(GL.GL_VERSION)
         from OpenGL.GL import shaders

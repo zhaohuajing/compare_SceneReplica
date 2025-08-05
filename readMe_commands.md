@@ -81,6 +81,39 @@ python bench_model_based_grasping.py -s 10 --pose_method posecnn --obj_order ran
 - Need to edit shader files (i.e., ycb_render/shaders/vertex_shader.vert) to replace GLSL 4.60 with 1.40, i.e., #version 460 -> #version 140
 
 
+
+---------
+- TO run model-base grasping with poseRBPF, need 7 terminals open:
+---------
+  - terminal 1: (~/compare_SceneReplica/launch#)
+roslaunch just_robot.launch
+  - terminal 2: (~/compare_SceneReplica/src#)
+python setup_scene_sim.py
+  - terminal 3: 
+roslaunch fetch_moveit_config demo.launch
+  - terminal 4: (~/compare_SceneReplica/src/posecnn-pytorch#) [may be optional]
+rviz -d ./ros/posecnn_fetch.rviz
+  - terminal 5: (~/compare_SceneReplica/src/posecnn-pytorch#)
+./experiments/scripts/ros_ycb_object_test_subset_poserbpf_realsense_ycb.sh 0 0
+  - terminal 6: (~/compare_SceneReplica/src/posecnn-pytorch#) [pending shader modification]
+/experiments/scripts/ros_poserbpf_ycb_object_test_subset_realsense_ycb.sh 0 0
+  - terminal 6: (~/compare_SceneReplica/src#)
+python bench_model_based_grasping.py -s 10 --pose_method poserbpf --obj_order random
+
+- Also need to edit shader files (i.e., ycb_render/shaders/vertex_shader.vert) to replace GLSL 4.60 with 1.40, i.e., #version 460 -> #version 140
+
+- similar to what have been done for poseCNN: modified ycb_object.py for Error Fix: IndexError from _extents_all[cfg.TRAIN.CLASSES] (IndexError: too many indices for array: array is 2-dimensional, but 21 were indexed) using:
+self._extents = self._extents_all[cfg.TRAIN.CLASSES, :]
+self._extents_test = self._extents_all[cfg.TEST.CLASSES, :] 
+
+- Created new symlink ln -s ~/Datasets/poseCNN_data/models/YCB_Objects/models ~/compare_SceneReplica/src/posecnn-pytorch/data/models [note: not YCB_Video models]
+and checkpoint: ln -s ~/Datasets/poseCNN_data/checkpoint/poseCNN/checkpoints/ycb_object ~/compare_SceneReplica/src/posecnn-pytorch/data/checkpoints/ycb_object
+
+- Resolved ycb_render.py error with gpu device not found (Available devices: []
+IndexError: list index out of range) from "self.r = CppYCBRenderer.CppYCBRenderer(width, height, get_available_devices()[gpu_id])" to equivalent of "self.r = CppYCBRenderer.CppYCBRenderer(width, height, 0)"
+
+- installed pycuda; catkin_make to make posecnn_pytorch.msg callable; 
+
 ------
 - To run graspNet:
 ------

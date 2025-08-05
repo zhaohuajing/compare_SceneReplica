@@ -1079,3 +1079,39 @@ Tried to allocate 938.00 MiB. GPU 0 has a total capacity of 5.60 GiB of which 54
 - after:
 Tried to allocate 938.00 MiB. GPU 0 has a total capacity of 5.60 GiB of which 683.38 MiB is free.
 
+-----
+
+running poserbpf under posecnn-pytorch, when only posecnn is taking effect:
+
+024_bowl
+005_tomato_soup_can
+035_power_drill
+011_banana
+004_sugar_box
+[004_sugar_box] points : 10902
+[004_sugar_box] detection score: 0.799198
+[004_sugar_box] location mean: 0.368687, 0.267487, 0.810683
+[004_sugar_box] location mean on table: 0.386015, 0.288044, 0.055452
+-------------------------------------------
+[035_power_drill] points : 11032
+[035_power_drill] detection score: 0.995783
+[035_power_drill] location mean: 0.480357, 0.089962, 0.783328
+[035_power_drill] location mean on table: 0.518232, 0.098236, 0.082026
+-------------------------------------------
+[005_tomato_soup_can] points : 3331
+[005_tomato_soup_can] detection score: 0.998381
+[005_tomato_soup_can] location mean: 0.699173, -0.007104, 0.791082
+[005_tomato_soup_can] location mean on table: 0.727574, -0.008531, 0.042656
+-------------------------------------------
+[011_banana] points : 2200
+[011_banana] detection score: 0.980949
+[011_banana] location mean: 0.658497, -0.098329, 0.769730
+[011_banana] location mean on table: 0.698406, -0.107803, 0.064698
+-------------------------------------------
+[024_bowl] points : 12379
+[024_bowl] detection score: 0.999525
+[024_bowl] location mean: 0.493304, -0.178501, 0.763270
+[024_bowl] location mean on table: 0.522025, -0.195610, 0.063862
+-------------------------------------------
+
+
