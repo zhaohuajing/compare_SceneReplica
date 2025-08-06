@@ -97,7 +97,7 @@ rviz -d ./ros/posecnn_fetch.rviz
 ./experiments/scripts/ros_ycb_object_test_subset_poserbpf_realsense_ycb.sh 0 0
   - terminal 6: (~/compare_SceneReplica/src/posecnn-pytorch#) [pending shader modification]
 /experiments/scripts/ros_poserbpf_ycb_object_test_subset_realsense_ycb.sh 0 0
-  - terminal 6: (~/compare_SceneReplica/src#)
+  - terminal 7: (~/compare_SceneReplica/src#)
 python bench_model_based_grasping.py -s 10 --pose_method poserbpf --obj_order random
 
 - Also need to edit shader files (i.e., ycb_render/shaders/vertex_shader.vert) to replace GLSL 4.60 with 1.40, i.e., #version 460 -> #version 140
@@ -124,8 +124,8 @@ python contact_graspnet/inference.py --np_path=test_data/0.npy  --forward_passes
 ------
 - To run model-free grasp with uois (unseen object clustering) and contact_graspnet:
 ------
-  - terminal 1: (~/compare_SceneReplica/launch#)
-roslaunch just_robot.launch
+  - terminal 1: (~/compare_SceneReplica/launch#) [optional: headless:=true gui:=false]
+roslaunch just_robot.launch 
   - terminal 2: (~/compare_SceneReplica/src#)
 python setup_scene_sim.py
   - terminal 3: 

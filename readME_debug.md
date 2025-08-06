@@ -1064,7 +1064,7 @@ usr/local/lib/python3.8/dist-packages/fvcore/common/checkpoint.py:252: FutureWar
 /root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/fcn/../../lib/fcn/get_network_crop.py:81: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
   network_data_crop = torch.load(pretrained_crop)
 
-Added 'torch.load` with `weights_only=False` for: 
+Added 'torch.load` with `weights_only=True` for: 
 /root/compare_SceneReplica/src/UnseenObjectsWithMeanShift/ros/../lib/fcn/../../lib/fcn/get_network_crop.py
 /usr/local/lib/python3.8/dist-packages/fvcore/common/checkpoint.py
 
@@ -1115,3 +1115,104 @@ running poserbpf under posecnn-pytorch, when only posecnn is taking effect:
 -------------------------------------------
 
 
+-------------------------------------------
+
+Date: 2025-08-06
+Platform: ROS1 Docker container on ROS2 host machine
+Project: compare_SceneReplica/src/posecnn-pytorch
+Focus: PoseRBPF setup, shader fixes, memory optimizations, and grasping pipeline debugging
+
+1. Shader Error Debugging
+   - Problem: GLSL shader error due to version (460->140) invalid syntax (uniform vec3 light_pooordinate -> uniform vec3 light_positions;) (commented out: layout (location = 0) ).
+   - Fix: Corrected the typo in shader source.
+   -  Outcome: Shader compiled and rendered without errors; visual output in RViz stabilized.
+   
+2. Symlink Setup for poseRBPF
+
+   - Created symlinks:
+       - From ~/Datasets/poseCNN_data/checkpoint/poseRBPF/codebooks → ~/compare_SceneReplica/src/posecnn-pytorch/data/codebooks
+       - From all files under checkpoint/poseRBPF/checkpoints → data/checkpoints/
+        
+3. CUDA Out-of-Memory (OOM) Issues
+   - Problem: Intermittent CUDA memory allocation failures during "./experiments/scripts/ros_poserbpf_ycb_object_test_subset_realsense_ycb.sh 0 0" script runs.
+   - Fixes:
+        - Temporally moved unused .pth model checkpoint files of ycb objects (other than scene_idx=10, i.e., objects #004, 005, 011, 024, 035) to prevent loading unneeded models for the current scene (scene_idx=10) into a subdirectory inside:
+    	~/Datasets/poseCNN_data/checkpoint/poseRBPF/checkpoints/	
+   - Outcome: Reduced memory footprint; PoseRBPF and detection ran without crashing.
+   
+4. SceneReplica Pose Recognition Pipeline
+   - Successfully ran:
+	./experiments/scripts/ros_ycb_object_test_subset_poserbpf_realsense_ycb.sh 0 0
+	./experiments/scripts/ros_poserbpf_ycb_object_test_subset_realsense_ycb.sh 0 0
+
+   - Results:
+    	- ros_ycb_object_test_subset_poserbpf_realsense_ycb.sh:
+    	Correct object detection and pose estimation for all 5 YCB objects.
+
+     	- ros_poserbpf_ycb_object_test_subset_realsense_ycb.sh:
+    	Entered tracking mode but showed timeouts in receiving posecnn poses.
+
+   - RViz Output:
+	- PoseCNN detection and poseRBPF poses visualized successfully.
+	- poseRBPF overlay appeared with slight haze but no flickering
+	- detected object frames (half/horizontally) correctly created, but two exist for each obect, one on the table, one on the ground.
+	
+5. Grasp Execution and Manipulation Planning
+   - Pipeline executed successfully, but:
+        - Grasp failed: No valid motion plan found.
+        - Top-down grasp attempted, but ultimately aborted due to timeout.
+        - Terminal outputs indicate collision or unreachable pose.	
+	
+6. Terminal output details:
+	Two simuternously running .sh given output as below: "./experiments/scripts/ros_ycb_object_test_subset_poserbpf_realsense_ycb.sh 0 0" gave "===========================================
+	024_bowl
+	035_power_drill
+	005_tomato_soup_can
+	011_banana
+	004_sugar_box
+	[004_sugar_box] points : 10902
+	[004_sugar_box] detection score: 0.798857
+	[004_sugar_box] location mean: 0.368688, 0.267488, 0.810682
+	[004_sugar_box] location mean on table: 0.386015, 0.288044, 0.055452
+	-------------------------------------------
+	[035_power_drill] points : 11063
+	[035_power_drill] detection score: 0.996166
+	[035_power_drill] location mean: 0.480477, 0.090213, 0.783298
+	[035_power_drill] location mean on table: 0.518361, 0.098515, 0.082026
+	-------------------------------------------
+	[005_tomato_soup_can] points : 3141
+	[005_tomato_soup_can] detection score: 0.989122
+	[005_tomato_soup_can] location mean: 0.749314, -0.048828, 0.789723
+	[005_tomato_soup_can] location mean on table: 0.778981, -0.052294, 0.042656
+	-------------------------------------------
+	[011_banana] points : 2197
+	[011_banana] detection score: 0.974858
+	[011_banana] location mean: 0.720456, -0.163490, 0.768673
+	[011_banana] location mean on table: 0.762618, -0.177295, 0.064698
+	-------------------------------------------
+	[024_bowl] points : 12392
+	[024_bowl] detection score: 0.999641
+	[024_bowl] location mean: 0.493296, -0.178598, 0.763271
+	[024_bowl] location mean on table: 0.522015, -0.195714, 0.063862
+	-------------------------------------------" and "./experiments/scripts/ros_poserbpf_ycb_object_test_subset_realsense_ycb.sh 0 0" gave "****************************Tracking Mode**********************************
+	posecnn pose for posecnn/00_sugar_box_01_roi time out 2490.000000 2458.000000
+	posecnn pose for posecnn/00_tomato_soup_can_01_roi time out 2490.000000 2458.000000
+	posecnn pose for posecnn/00_banana_01_roi time out 2490.000000 2458.000000
+	posecnn pose for posecnn/00_bowl_01_roi time out 2490.000000 2458.000000
+	posecnn pose for posecnn/00_power_drill_01_roi time out 2490.000000 2458.000000
+	****************************Tracking Mode**********************************". In the Rviz scene by "~/compare_SceneReplica/src/posecnn-pytorch# rviz -d ./ros/posecnn_fetch.rviz
+	" both "poseCNN detection" and " poseRBPF pose" window shows the object scene, the "poseRBPF pose" visual shows like with a light fog on top of it, yet nolonger with flickers. The model-based manipulation pipeline also ran no errors this time; although it appears not able to find a motion planning path and top-down grasp did not actually exectute, with the following terminal output: "RT_gripper [[-7.32407127e-02 -9.68691396e-01 -2.37218840e-01  1.39705038e-01]
+	 [-2.85506283e-01  2.48267951e-01 -9.25661486e-01  4.17910438e-01]
+	 [ 9.55574152e-01 -6.86375975e-05 -2.94750802e-01  1.38751978e+00]
+	 [ 0.00000000e+00  0.00000000e+00  0.00000000e+00  1.00000000e+00]]
+	Filter ratio: 1.0
+	returning all none
+	grasp indbex None, object to grasp 011_banana
+	No plans found for direct grasping, trying TOP-DOWN!
+	TOP-DOWN STATS-------------------------
+	H, max, min, mean, center 0.036671000000000016 0.016900000000000005 -0.01977100000000001 -0.0005388110177404292 -0.0014355000000000027
+	Z_TIP: 0.745
+	Gripper Width: 0.07846077930477036
+	[WARN] [1754520021.008919665, 2191.555000000]: Fail: ABORTED: TIMED_OUT
+	no plan found in grasp()
+	Gripper fully open/closed (after Grasping)....Not Lifting!"
