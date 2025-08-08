@@ -1,0 +1,14 @@
+# keep your current torch; DO NOT pin torch here
+pointnet2-ops==3.0.0
+numpy>=1.22,<2
+h5py>=3.7
+tqdm>=4.62
+trimesh>=3.9
+pyrender==0.1.45
+matplotlib>=3.5
+easydict==1.10
+opencv-python>=4.6
+PyYAML>=6.0
+tensorboardX>=2.6
+python-fcl==0.7.0
+Rtree>=1.0.1

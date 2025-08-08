@@ -74,7 +74,8 @@ class GraspEstimator:
         improved_eulers = np.hstack(improved_eulers)
         improved_ts = np.hstack(improved_ts)
         improved_success = np.hstack(improved_success)
-        if self.choose_fn is "all":
+        # if self.choose_fn is "all":
+        if self.choose_fn == "all":  # modified 25/08/07 from "is" to "==""    
             selection_mask = np.ones(improved_success.shape, dtype=np.float32)
         else:
             selection_mask = self.choose_fns[self.choose_fn](improved_eulers,
