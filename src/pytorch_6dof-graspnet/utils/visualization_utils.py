@@ -1,6 +1,12 @@
 from __future__ import print_function
 
-import mayavi.mlab as mlab
+# import mayavi.mlab as mlab
+#  25/08/07 temporally guard mlab
+try:
+    import mayavi.mlab as mlab
+except Exception:
+    mlab = None
+
 from utils import utils, sample
 import numpy as np
 import trimesh

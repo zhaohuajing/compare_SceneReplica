@@ -7,11 +7,17 @@ import grasp_estimator
 import sys
 import os
 import glob
-import mayavi.mlab as mlab
 from utils.visualization_utils import *
-import mayavi.mlab as mlab
+# import mayavi.mlab as mlab
+try:
+    import mayavi.mlab as mlab
+except Exception:
+    mlab = None
 from utils import utils
 from data import DataLoader
+
+# 25/08/07 temporally added below: 
+# mlab.options.offscreen = True
 
 from transforms3d.quaternions import mat2quat, quat2mat
 
@@ -152,6 +158,78 @@ def backproject(depth_cv,
     return X
 
 
+# Added 25/08/07 for npy loading error
+def load_pointcloud_any(npy_file):
+    import numpy as np
+
+    data = np.load(npy_file, allow_pickle=True, encoding="latin1", fix_imports=True)
+
+    # Case 1: .npz archive
+    if hasattr(data, "files"):  # NpzFile
+        # try common keys; fall back to first
+        for k in ("pc", "points", "xyz", "point_cloud", "pts"):
+            if k in data.files:
+                pc = data[k]
+                break
+        else:
+            pc = data[data.files[0]]
+
+    # Case 2: .npy that contains a Python object
+    elif isinstance(data, np.ndarray) and data.dtype == object:
+        # 0-D object array?
+        if data.ndim == 0:
+            obj = data.item()
+        else:  # 1-D object array; assume first element is the object
+            obj = data[0]
+
+        if isinstance(obj, dict):
+            for k in ("pc", "points", "xyz", "point_cloud", "pts"):
+                if k in obj:
+                    pc = obj[k]
+                    break
+            else:
+                raise ValueError(f"Unknown dict keys in {npy_file}: {list(obj.keys())}")
+        else:
+            pc = np.asarray(obj)
+
+    else:
+        pc = np.asarray(data)
+
+    pc = np.asarray(pc)
+    # normalize to (N, 3) or (N, 6)
+    if pc.ndim == 1 and pc.size % 3 == 0:
+        pc = pc.reshape(-1, 3)
+    if not (pc.ndim == 2 and pc.shape[1] in (3, 6)):
+        raise ValueError(f"Unexpected point cloud shape from {npy_file}: {pc.shape}, dtype={pc.dtype}")
+
+    return pc.astype(np.float32, copy=False)
+
+
+def load_blue_mug(npy_file):
+    import numpy as np
+    d = np.load(npy_file, allow_pickle=True, encoding="latin1", fix_imports=True).item()
+    pc = d["smoothed_object_pc"].astype(np.float32, copy=False)   # (N,3)
+    image = d.get("image")
+    depth = d.get("depth")
+    K = d.get("intrinsics_matrix")
+    T_bc = d.get("base_to_camera_rt")
+    return pc, image, depth, K, T_bc
+
+
+def quick_matplotlib_vis(points_xyz):
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(points_xyz[:,0], points_xyz[:,1], points_xyz[:,2], s=1)
+    ax.set_box_aspect([1,1,1])
+    plt.show()
+
+# use it when mlab is None
+if not USE_MAYAVI:
+    quick_matplotlib_vis(object_pc)
+
+
 def main(args):
     parser = make_parser()
     args = parser.parse_args()
@@ -181,14 +259,23 @@ def main(args):
             # Depending on your numpy version you may need to change allow_pickle
             # from True to False.
 
-            npy_file = "demo/data/real_world.npy"
+            # npy_file = "demo/data/real_world.npy" # modified 25/08/07: real_world.npy not exisit
+            npy_file = "demo/data/blue_mug.npy"
             print(f"npyfile", {npy_file})
             pc_colors = None
-            object_pc = np.load(npy_file)            
+            # object_pc = np.load(npy_file)
+            # object_pc = np.load(npy_file, allow_pickle=True, encoding="latin1", fix_imports=True).item()     # modified 25/08/07  
+            # object_pc = load_pointcloud_any(npy_file)  # modified 25/08/07  
+            object_pc, rgb, depth, K, T_bc = load_blue_mug(npy_file) # modified 25/08/07  
+            assert object_pc.ndim == 2 and object_pc.shape[1] == 3, f"Bad PC shape: {object_pc.shape}"
             
+                     
             SCALING_FACTOR = 1.0
             org_pc = object_pc.copy()
-            center = np.mean(object_pc, axis=0)
+            # center = np.mean(object_pc, axis=0)
+            # center = object_pc[:, :3].mean(axis=0)  # modified 25/08/07 
+            center = object_pc.mean(axis=0) # modified 25/08/07 
+
             object_pc -= center
             object_pc *= SCALING_FACTOR
             object_pc += center

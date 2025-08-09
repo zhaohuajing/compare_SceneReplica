@@ -1232,34 +1232,26 @@ cd ~/compare_SceneReplica/src/Pointnet2_PyTorch
 pip install -e . --no-deps --no-build-isolation
 
 2) Build and install CUDA ops (pointnet2_ops) for RTX 2060 (sm_75)
-
-We had ninja / arch issues at first (nvcc tried to compile for compute_37). Final working flow:
-
+- We had ninja / arch issues at first (nvcc tried to compile for compute_37). Final working flow:
 # Clean
 cd ~/compare_SceneReplica/src/Pointnet2_PyTorch/pointnet2_ops_lib
 python setup.py clean
 rm -rf build
-
 # Make sure CUDA arch targets are correct (Turing)
 export TORCH_CUDA_ARCH_LIST="7.5"
 export CUDAARCHS=75
-
 # Install ninja for JIT builds
 pip install ninja
-
 # Build as a wheel and install
 pip install . --no-build-isolation --no-deps
 
 Important edit to avoid old arch flags coming back
 
-If you previously edited setup.py to include:
-
+- If previous setup.py to include:
 os.environ["TORCH_CUDA_ARCH_LIST"] = "3.7+PTX;5.0;6.0;6.1;6.2;7.0;7.5"
-
-Remove that line (or change it to just "7.5"). Leaving old arches in there is what caused the nvcc fatal: Unsupported gpu architecture 'compute_37'.
+- Remove that line (or change it to just "7.5"). Leaving old arches in there is what caused the nvcc fatal: Unsupported gpu architecture 'compute_37'.
 3) Sanity checks for pointnet2_ops
-
-Quick import test (ensures the compiled _ext is found and runs on GPU):
+- Quick import test (ensures the compiled _ext is found and runs on GPU):
 
 python - <<'PY'
 import torch
@@ -1281,11 +1273,9 @@ print("Has compiled _ext?:", glob.glob(os.path.join(pkg_dir, "_ext*")))
 PY
 
 2. pytorch_6dof-graspnet
-
-The original requirements.txt was pinned for torch==1.4.0+cu100, which won’t fly on CUDA 12. We created a CUDA-12 friendly file and installed that.
+- The original requirements.txt was pinned for torch==1.4.0+cu100, which won’t fly on CUDA 12. We created a CUDA-12 friendly file and installed that.
 1) CUDA-12 requirements
-
-Create requirements_cuda12.txt in ~/compare_SceneReplica/src/pytorch_6dof-graspnet with:
+- Create requirements_cuda12.txt in ~/compare_SceneReplica/src/pytorch_6dof-graspnet with:
 
 pointnet2-ops==3.0.0
 numpy<2,>=1.22
@@ -1301,7 +1291,7 @@ tensorboardX>=2.6
 python-fcl==0.7.0
 Rtree>=1.0.1
 
-Then install:
+- Then install:
 
 cd ~/compare_SceneReplica/src/pytorch_6dof-graspnet
 pip install -r requirements_cuda12.txt
@@ -1313,12 +1303,9 @@ pip install -r requirements_cuda12.txt
         We already aligned hydra-core==1.3.2 and omegaconf==2.3.0 earlier to satisfy detectron2 on this machine. Keep those pinned if detectron2 is also used in this env.
 
 2) Fix a tiny code warning
-
-In grasp_estimator.py:
-
+- In grasp_estimator.py:
 # Old (warns in Python):
 if self.choose_fn is "all":
-
 # New:
 if self.choose_fn == "all":
 
@@ -1332,19 +1319,14 @@ for m in ["models", "utils", "grasp_estimator"]:
 print("6dof-graspnet modules import OK")
 PY
 
-Common pitfalls we hit (and fixes)
-
+- Common pitfalls we hit (and fixes)
     “No CUDA GPUs are available” inside Docker → container wasn’t started with GPU or NVML was borked. We restarted the container with GPU and verified nvidia-smi works inside the container.
-
     NVCC Unsupported arch 'compute_37' → caused by hard-coded TORCH_CUDA_ARCH_LIST including old arches. Fixed by setting 7.5 only and removing old lines from setup.py.
-
     JIT extension complaining about ninja → pip install ninja.
-
     Conflicting hydra-core/omegaconf (from earlier steps) → pin to hydra-core==1.3.2, omegaconf==2.3.0 to keep detectron2 happy in this env.
 
-One-liner “smoke test” for the whole stack
-
-Run this anytime to confirm CUDA + pointnet2 ops + basic 6dof-graspnet imports:
+- One-liner “smoke test” for the whole stack
+  - Run this anytime to confirm CUDA + pointnet2 ops + basic 6dof-graspnet imports:
 
 python - <<'PY'
 import torch, importlib
@@ -1358,7 +1340,7 @@ print("All good. pointnet2 gather:", out.shape)
 PY
 
 
--------
+------- sample output ------
 
 root@nerve-desktop-6:~/compare_SceneReplica/src/pytorch_6dof-graspnet# python - <<'PY'
 > import torch
