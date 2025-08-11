@@ -125,7 +125,8 @@ class GraspNetModel:
         if isinstance(net, torch.nn.DataParallel):
             net = net.module
         print('loading the model from %s' % load_path)
-        checkpoint = torch.load(load_path, map_location=self.device)
+        # checkpoint = torch.load(load_path, map_location=self.device)
+        checkpoint = torch.load(load_path, map_location=self.device, weights_only=True) # modified 25/08/11
         if hasattr(checkpoint['model_state_dict'], '_metadata'):
             del checkpoint['model_state_dict']._metadata
         net.load_state_dict(checkpoint['model_state_dict'])

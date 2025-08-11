@@ -1383,3 +1383,356 @@ CUDA is available: True
 CUDA: True
 
 
+=============
+
+Continued: Running ~/compare_SceneReplica/src/pytorch_6dof-graspnet# python -m demo.main
+
+1. Working on enabling pytorch_6dof-graspnet# python -m demo.main. Attempted Mayavi installation, yet only working with version 4.7.1 (not 4.8.2)
+
+2. Attempted Mayavi installation
+    Tried installing via pip install mayavi → dependency issues.
+
+    - Attempted system packages:
+
+    apt-get install python3-mayavi python3-vtk7 python3-traits python3-traitsui python3-pyface python3-pyqt5
+
+    → E: Unable to locate package python3-mayavi (no package in your base image).
+
+    Checked alternative: pip install mayavi==4.7.4 (last PyPI version supporting Py3.8 + VTK7/9) — pending decision on whether to fully set up Mayavi or skip.
+
+3. Temporary bypass for Mayavi
+    Added:
+
+    try:
+        import mayavi.mlab as mlab
+    except Exception:
+        mlab = None
+
+    to:
+
+        pytorch_6dof-graspnet/utils/visualization_utils.py
+
+        pytorch_6dof-graspnet/demo/main.py
+
+4. .npy loading error
+
+    Original code:
+
+object_pc = np.load(npy_file)
+
+raised:
+
+ValueError: Object arrays cannot be loaded when allow_pickle=False
+
+Changed to:
+
+object_pc = np.load(npy_file, allow_pickle=True, encoding="latin1")
+
+New error:
+
+    numpy.AxisError: axis 0 is out of bounds for array of dimension 0
+
+    → Caused by .npy file being a pickled dict, not a plain array.
+
+5. Inspecting blue_mug.npy
+   - Wrote inspection snippet:
+
+    a = np.load("demo/data/blue_mug.npy", allow_pickle=True, encoding="latin1")
+
+    → Found it’s:
+
+        Top-level: np.ndarray with dtype=object, shape ()
+
+        Contains a dict with keys:
+            smoothed_object_pc → (15841, 3) float64
+            depth → (480, 640) float32
+            image → (480, 640, 3) uint8
+            intrinsics_matrix → (3, 3) float64
+            base_to_camera_rt
+
+6. Fix for object_pc
+  - Replaced:
+object_pc = np.load(npy_file, allow_pickle=True, encoding="latin1")
+
+with:
+
+    data = np.load(npy_file, allow_pickle=True, encoding="latin1").item()
+    object_pc = data["smoothed_object_pc"]
+
+    This resolved the axis error; model now proceeds to visualization.
+
+7. Visualization error due to mlab=None
+    At:
+mlab.figure(bgcolor=(1, 1, 1))
+
+- got:
+
+AttributeError: 'NoneType' object has no attribute 'figure'
+Options discussed:
+    Full Mayavi install (keep GUI) → undo mlab=None and fix dependencies.
+    Guard/fallback:
+
+if mlab is not None:
+    mlab.figure(...)
+else:
+    print("Skipping Mayavi visualization.")
+
+Optional: use Matplotlib 3D scatter for basic point cloud display.
+
+=============
+
+25/08/11 - 6DOF-GraspNet working with mayavi plots
+Fix the TraitsUI backend (Qt)
+
+In the same shell you’ll run the demo:
+
+# make sure HOME is set (kills the "HOME not set" warning)
+export HOME=/root
+
+# tell Traits/Pyface to use Qt5 + PyQt5
+export ETS_TOOLKIT=qt
+export QT_API=pyqt5
+
+Install (or re-install) Qt bindings:
+
+pip install -U PyQt5==5.15.2 PyQt5-sip==12.11.0 PyQtWebEngine==5.15.2
+
+Quick sanity test:
+
+python - <<'PY'
+import os
+os.environ['ETS_TOOLKIT']='qt'
+os.environ['QT_API']='pyqt5'
+from pyface.qt import QtCore
+print("Qt OK — version:", QtCore.QT_VERSION_STR)
+PY
+
+You should see a version line (e.g. 5.15.2) and no import errors.
+Fix the TVTK/VTK mismatch
+
+That warning:
+
+Imported VTK version (9.0) does not match TVTK classes (7.1)
+
+means your installed Mayavi bundled TVTK classes for VTK 7.1. We need Mayavi to build TVTK against your VTK (9.0.x).
+
+Do this:
+
+# 1) Pin VTK to a stable Py3.8 wheel
+pip install -U "vtk==9.0.3"
+
+# 2) Remove any Mayavi you have
+pip uninstall -y mayavi
+
+# 3) Reinstall Mayavi **from source** so it builds TVTK for VTK 9.0.3
+#    (the --no-binary forces a local build that generates tvtk_classes.zip)
+pip install --no-binary=mayavi "mayavi==4.7.4"
+
+Sanity test (GUI):
+
+python - <<'PY'
+import os
+os.environ['ETS_TOOLKIT']='qt'
+os.environ['QT_API']='pyqt5'
+from mayavi import mlab
+mlab.figure(bgcolor=(0,0,0))
+mlab.test_plot3d()
+mlab.show()
+PY
+
+You should get the tube plot window with no TVTK mismatch warning.
+
+    If the source build ever complains about OpenGL, make sure you have system GL libs. On Ubuntu 20.04 inside Docker, this usually helps:
+
+    apt-get update && apt-get install -y libgl1 libgl1-mesa-dev libglu1-mesa-dev libosmesa6-dev libxt6 libxext6 libxrender1
+
+Re-enable Mayavi in your demo
+
+You previously wrapped the Mayavi import with a try/except and set mlab=None. Once the above works, revert to the normal import:
+
+import mayavi.mlab as mlab
+
+(If you want to keep a fallback for headless runs later, I can give you a small Matplotlib-3D fallback block—say the word.)
+Why this works
+
+    ETS_TOOLKIT=qt + QT_API=pyqt5 tells TraitsUI/Pyface which GUI backend to use; otherwise you get “Could not import backend for traitsui”.
+
+    --no-binary=mayavi forces building TVTK wrappers against your installed VTK (9.0.3), removing the “VTK 9.0 vs TVTK 7.1” mismatch.
+
+Ping me with any build logs if the Mayavi source build still grumbles—I can tune the versions/libs further.
+
+--------
+
+CUDA-12 + PyTorch 2.4 + PointNet2 + 6DoF-GraspNet + Mayavi (GUI) setup, including the little fixes we made along the way.
+0) System baseline
+
+    Ubuntu 20.04 (in Docker), CUDA 12.1 runtime, PyTorch 2.4.1+cu121, Python 3.8
+
+    GPU (Turing, e.g., RTX 20xx): compute capability 7.5
+
+# Helpful packages for Qt/VTK GUI
+apt-get update && apt-get install -y \
+  libxkbcommon-x11-0 libgl1  # GL + X11 bits for Qt GUI in container
+
+1) PointNet2 ops (CUDA extensions)
+
+From your Pointnet2_PyTorch/pointnet2_ops_lib:
+
+cd ~/compare_SceneReplica/src/Pointnet2_PyTorch/pointnet2_ops_lib
+
+# Make sure no stale build artifacts
+python setup.py clean || true
+rm -rf build
+
+# Target your GPU arch only (Turing)
+export TORCH_CUDA_ARCH_LIST="7.5"
+export CUDAARCHS=75
+export MAX_JOBS=$(nproc)
+
+# Build & install (no isolation so it sees your system compilers/CUDA)
+pip install . --no-build-isolation --no-deps
+
+# Also ensure ninja is present for JIT fallbacks
+pip install ninja
+
+If your setup.py had hardcoded old arches
+
+Remove or comment any line like:
+
+os.environ["TORCH_CUDA_ARCH_LIST"] = "3.7+PTX;5.0;6.0;6.1;6.2;7.0;7.5"
+
+or replace with just 7.5. Those old (e.g. compute_37) flags cause “Unsupported gpu architecture 'compute_37'” with modern CUDA.
+Sanity check
+
+python - <<'PY'
+import torch
+from pointnet2_ops import pointnet2_utils as p2
+print("CUDA:", torch.cuda.is_available())
+x = torch.rand(2, 1024, 3, device="cuda")
+idx = torch.randint(0, 1024, (2, 128), device="cuda")
+out = p2.gather_operation(x.transpose(1,2).contiguous(), idx.int())
+print("gather_operation OK:", out.shape)
+PY
+
+2) 6DoF-GraspNet Python deps (CUDA-12 friendly)
+
+Create requirements_cuda12.txt in pytorch_6dof-graspnet/:
+
+pointnet2-ops==3.0.0      # already built above
+numpy<2,>=1.22
+h5py>=3.7
+tqdm>=4.62
+trimesh>=3.9
+pyrender==0.1.45
+matplotlib>=3.5
+easydict==1.10
+opencv-python>=4.6
+PyYAML>=6.0
+tensorboardX>=2.6
+python-fcl==0.7.0
+Rtree>=1.0.1
+
+Install:
+
+cd ~/compare_SceneReplica/src/pytorch_6dof-graspnet
+pip install -r requirements_cuda12.txt
+
+3) Mayavi/VTK (GUI)
+
+You wanted GUI (X11), not offscreen. This combo works reliably on Py3.8:
+
+pip install PyQt5==5.15.2 PyQtWebEngine==5.15.2
+export ETS_TOOLKIT=qt
+export QT_API=pyqt5
+export HOME=/root  # avoid traits HOME warnings
+
+Then install a compatible Mayavi stack. (If wheels for 4.8.x misbehave on your image, 4.7.1 + your Qt5 backend is fine as long as GUI starts. If you ever see TVTK/VTK mismatch warnings, re-install to a matching set, e.g. VTK 9.2.6 with Mayavi 4.8.x.) - use 4.7.4
+
+Quick smoke test:
+
+python - <<'PY'
+from mayavi import mlab
+mlab.figure(bgcolor=(0,0,0))
+mlab.test_plot3d()
+print("OK: created figure")
+PY
+
+(You should see/feel a Mayavi window pop up in your X session; you can add mlab.show() for a blocking window.)
+4) Link your data under checkpoints (your request)
+
+src=~/Datasets/6dof_graspnet
+dst=~/compare_SceneReplica/src/pytorch_6dof-graspnet/checkpoints
+mkdir -p "$dst"
+cd "$src"
+for d in */ ; do
+  base="${d%/}"
+  if [ ! -e "$dst/$base" ]; then
+    ln -s "$src/$base" "$dst/$base"
+    echo "linked -> $dst/$base"
+  fi
+done
+
+5) Fix for legacy .npy demo sample
+
+The bundled demo/data/blue_mug.npy is a pickled 0-D object array holding a dict:
+{'smoothed_object_pc': (N,3) float64, 'image', 'depth', 'intrinsics_matrix', ...}
+
+Use a robust loader (we added this):
+
+# utils/io_utils.py (or inline in demo)
+import numpy as np
+def load_legacy_mug(path):
+    a = np.load(path, allow_pickle=True, encoding="latin1")
+    if isinstance(a, np.lib.npyio.NpzFile):
+        return a  # unlikely here
+    if isinstance(a, np.ndarray) and a.dtype == object:
+        d = a.item()
+        pc = d.get('smoothed_object_pc')
+        if pc is None:
+            raise ValueError("Missing 'smoothed_object_pc' in legacy npy")
+        return pc.astype(np.float32)
+    if isinstance(a, np.ndarray) and a.ndim == 2 and a.shape[1] == 3:
+        return a.astype(np.float32)
+    raise ValueError(f"Unexpected content in {path}")
+
+Then in demo/main.py replace the old np.load line with:
+
+from utils.io_utils import load_legacy_mug
+object_pc = load_legacy_mug("demo/data/blue_mug.npy")  # (N,3)
+
+(That kills the allow_pickle / AxisError issues and always returns an Nx3 float32 point cloud.)
+6) Optional: guard Mayavi usage
+
+If you want the demo to run headless too, keep the safe import:
+
+try:
+    import mayavi.mlab as mlab
+except Exception:
+    mlab = None
+
+…then only call mlab when mlab is not None. But since GUI is now working for you, you can also revert to the plain import mayavi.mlab as mlab.
+7) Run the demo
+
+cd ~/compare_SceneReplica/src/pytorch_6dof-graspnet
+python -m demo.main
+
+You should see:
+
+    both pretrained models load,
+
+    the blue mug sample processed,
+
+    an interactive Mayavi window with sampled grasps.
+
+8) Common pitfalls we already solved
+
+    nvcc: Unsupported gpu architecture 'compute_37' → remove old TORCH_CUDA_ARCH_LIST; set it to 7.5.
+
+    “Ninja is required to load C++ extensions” → pip install ninja.
+
+    TraitsUI/pyface backend errors → ensure ETS_TOOLKIT=qt, QT_API=pyqt5, install PyQt5, PyQtWebEngine.
+
+    VTK/TVTK mismatch warning → prefer matched Mayavi/VTK wheels (e.g., VTK 9.2.6 with Mayavi 4.8.x), or keep the combo that runs fine on your box.
+
+    Legacy .npy (object array with dict) → use the robust loader above.
+

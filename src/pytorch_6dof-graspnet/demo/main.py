@@ -21,6 +21,16 @@ from data import DataLoader
 
 from transforms3d.quaternions import mat2quat, quat2mat
 
+# 25/08/07: Fix the TraitsUI backend (Qt)
+# make sure HOME is set (kills the "HOME not set" warning)
+os.environ.setdefault("HOME", "/root")
+# tell Traits/Pyface to use Qt5 + PyQt5
+os.environ.setdefault("ETS_TOOLKIT", "qt") # equivalent to terminal: export ETS_TOOLKIT=qt
+os.environ.setdefault("QT_API", "pyqt5")
+
+
+
+
 def ros_qt_to_rt(rot, trans):
     qt = np.zeros((4,), dtype=np.float32)
     qt[0] = rot[3]
@@ -205,7 +215,7 @@ def load_pointcloud_any(npy_file):
     return pc.astype(np.float32, copy=False)
 
 
-def load_blue_mug(npy_file):
+def load_npy_object(npy_file):
     import numpy as np
     d = np.load(npy_file, allow_pickle=True, encoding="latin1", fix_imports=True).item()
     pc = d["smoothed_object_pc"].astype(np.float32, copy=False)   # (N,3)
@@ -225,9 +235,6 @@ def quick_matplotlib_vis(points_xyz):
     ax.set_box_aspect([1,1,1])
     plt.show()
 
-# use it when mlab is None
-if not USE_MAYAVI:
-    quick_matplotlib_vis(object_pc)
 
 
 def main(args):
@@ -260,13 +267,13 @@ def main(args):
             # from True to False.
 
             # npy_file = "demo/data/real_world.npy" # modified 25/08/07: real_world.npy not exisit
-            npy_file = "demo/data/blue_mug.npy"
+            # npy_file = "demo/data/white_bowl.npy" # also comment out - the algorithm should loop through all npy files under demo/data
             print(f"npyfile", {npy_file})
             pc_colors = None
             # object_pc = np.load(npy_file)
             # object_pc = np.load(npy_file, allow_pickle=True, encoding="latin1", fix_imports=True).item()     # modified 25/08/07  
             # object_pc = load_pointcloud_any(npy_file)  # modified 25/08/07  
-            object_pc, rgb, depth, K, T_bc = load_blue_mug(npy_file) # modified 25/08/07  
+            object_pc, rgb, depth, K, T_bc = load_npy_object(npy_file) # modified 25/08/07  
             assert object_pc.ndim == 2 and object_pc.shape[1] == 3, f"Bad PC shape: {object_pc.shape}"
             
                      
@@ -304,17 +311,22 @@ def main(args):
             generated_grasps, generated_scores = estimator.generate_and_refine_grasps(
                 object_pc)
 
+            # Commented out 25/08/11 for Mayavi incompatibility - enabled back after fixing
             mlab.figure(bgcolor=(1, 1, 1))
             draw_scene(
                 pc,
                 pc_color=pc_colors,
                 grasps=generated_grasps,
                 grasp_scores=generated_scores,
-                show_gripper_mesh=True,
+                # show_gripper_mesh=True, # modified 25/08/11: if set to True, grippers are huge; while set to false, visualize thin gripper grasp samples
+                show_gripper_mesh=False,
                 gripper='panda'
             )
+            # Added 25/08/11 quick_matplotlib_vis as an alternate for Mayavi mlab - still crash with: QObject::moveToThread: Current thread (0x45f2b2f0) is not the object's thread (0x46575440). Cannot move to target thread (0x45f2b2f0)
+                #qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "/usr/local/lib/python3.8/dist-packages/cv2/qt/plugins" even though it was found. This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+            # quick_matplotlib_vis(object_pc)
             print('close the window to show Fetch gripper grasps . . .')
-            # mlab.show()
+            mlab.show()
 
             # NOTE: Steps to align Fetch gripper with Panda Grasp: Rotate along Y by -90, then translate along Z by -0.08
             # See https://github.com/IRVLUTD/grasp-encoding-dataset/blob/515089b41821902e95546b29cd77324ffb929cc5/rendering-test/test_grasp_viz-alignment_palmpos.ipynb
@@ -342,14 +354,17 @@ def main(args):
             pc += center
             print(np.allclose(pc, org_pc))
 
+            # Commented out 25/08/11 for Mayavi incompatibility - enabled after fixing
             mlab.figure(bgcolor=(1, 1, 1))
             draw_scene(
                 pc,
                 pc_color=pc_colors,
                 grasps=tf_grasps1,
                 grasp_scores=generated_scores,
-                show_gripper_mesh=True,
-                gripper='fetch_real_world'
+                # show_gripper_mesh=True,
+                show_gripper_mesh=False,
+                # gripper='fetch_real_world'
+                gripper='fetch'
             )
             mlab.show()
 
