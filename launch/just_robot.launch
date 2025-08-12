@@ -1,5 +1,13 @@
 <launch>
 
+  <!-- Added 25/08/11 to ensure gazebo running with cpu (llvmpipe) to save nvidia memory -->
+  <env name="LIBGL_ALWAYS_SOFTWARE" value="1" />
+  <env name="MESA_LOADER_DRIVER_OVERRIDE" value="llvmpipe" />
+  <env name="GALLIUM_DRIVER" value="llvmpipe" />
+  <env name="__GLX_VENDOR_LIBRARY_NAME" value="mesa" />
+  <env name="QT_OPENGL" value="software" />
+
+
   <env name="GAZEBO_MODEL_PATH" value="$(find fetch_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
 
   <arg name="robot" default="fetch"/>

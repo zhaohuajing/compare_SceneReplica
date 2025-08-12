@@ -170,3 +170,24 @@ python bench_6dof_segmentation_grasping.py --grasp_method contact_gnet --seg_met
 
 - Need to manually Add robot (MotionPlan) and scene (pointcloud2) to the rviz window brought by ./ros/segmentation.rviz
 
+
+------
+- To run model-free grasp with uois (unseen object clustering) and 6dof_graspnet:
+------
+  - terminal 1: (~/compare_SceneReplica/launch#) [optional: headless:=true gui:=false][added exports to set GUI with cpu; no need to worry]
+roslaunch just_robot.launch 
+  - terminal 2: (~/compare_SceneReplica/src#)
+python setup_scene_sim.py
+  - terminal 3: 
+roslaunch fetch_moveit_config demo.launch
+  - terminal 4: (~/compare_SceneReplica/src/UnseenObjectClustering#)
+./experiments/scripts/ros_seg_rgbd_add_test_segmentation_realsense.sh 0
+  - terminal 5: (~/compare_SceneReplica/src/UnseenObjectClustering#) [optional! Can skip to save cuda memeory]
+rosrun rviz rviz -d ./ros/segmentation.rviz
+  - terminal 6: (~/compare_SceneReplica/src/pytorch_6dof-graspnet#) 
+./exp_publish_grasps.sh 
+  - terminal 7: (~/compare_SceneReplica/src#)
+python bench_6dof_segmentation_grasping.py --grasp_method graspnet --seg_method uois --obj_order random --scene_idx 10
+
+- Need to manually Add robot (MotionPlan) and scene (pointcloud2) to the rviz window brought by ./ros/segmentation.rviz
+
