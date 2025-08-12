@@ -1385,6 +1385,8 @@ CUDA: True
 
 =============
 
+Date: 2025-08-11
+Platform: ROS1 Docker container on ROS2 host machine
 Continued: Running ~/compare_SceneReplica/src/pytorch_6dof-graspnet# python -m demo.main
 
 1. Working on enabling pytorch_6dof-graspnet# python -m demo.main. Attempted Mayavi installation, yet only working with version 4.7.1 (not 4.8.2)
@@ -1481,7 +1483,7 @@ Optional: use Matplotlib 3D scatter for basic point cloud display.
 
 =============
 
-25/08/11 - 6DOF-GraspNet working with mayavi plots
+Date: 25/08/11 - 6DOF-GraspNet working with mayavi plots
 Fix the TraitsUI backend (Qt)
 
 In the same shell you’ll run the demo:
@@ -1735,4 +1737,70 @@ You should see:
     VTK/TVTK mismatch warning → prefer matched Mayavi/VTK wheels (e.g., VTK 9.2.6 with Mayavi 4.8.x), or keep the combo that runs fine on your box.
 
     Legacy .npy (object array with dict) → use the robust loader above.
+    
+-------
+
+Add necessaruy Nvidia GL .so (not inintially mounted) to docker without recreating docker using "docker cp" to resolve nvidia-drm related issue (i.e., changing CPU/llvmpipe to NVIDIA)
+
+A. Remove the broken/empty NVIDIA placeholders inside the container
+
+Those “is empty, not checked” warnings mean there are zero-byte files shipped by CUDA repo packages.
+
+# inside the container
+find /lib/x86_64-linux-gnu -maxdepth 1 -type f -name 'libnvidia*.so.*' -size 0 -print -delete
+ldconfig
+
+B. Copy the real NVIDIA GL/GLX/EGL libs from host → container (dereference symlinks)
+
+Use tar so we follow symlinks (the -h flag), then extract in the same paths.
+On the host
+
+# build a tarball with the needed libs; -h = follow symlinks (put the *targets* in the tar)
+sudo tar -C / -hcf /tmp/nvidia-gl.tar \
+  usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0 \
+  usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.0 \
+  usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.2 \
+  usr/lib/x86_64-linux-gnu/libnvidia-ml.so.* \
+  usr/lib/x86_64-linux-gnu/libnvidia-*.so.* \
+  usr/lib/x86_64-linux-gnu/nvidia \
+  usr/share/glvnd
+
+# copy the tarball into the running container
+docker cp /tmp/nvidia-gl.tar ros1_node_dev:/tmp/
+
+    If some of those paths don’t exist on your host, drop them from the tar command. You can also see everything available with:
+    ldconfig -p | grep -i nvidia
+
+Inside the container
+
+tar -C / -xvf /tmp/nvidia-gl.tar
+ldconfig
+
+C. Set helpful env vars in the container (only affects the current shell)
+
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+export LIBGL_ALWAYS_INDIRECT=0
+# if you’re on a PRIME/offload laptop GPU:
+export __NV_PRIME_RENDER_OFFLOAD=1
+
+D. Test again
+
+apt-get update && apt-get install -y mesa-utils
+glxinfo -B
+
+Success criteria:
+
+    OpenGL vendor string: NVIDIA Corporation
+
+    OpenGL renderer string: <your GPU model>
+    If you still see Mesa llvmpipe, something didn’t copy. Re-check step B (especially that tar -h was used and the files really exist on the host).
+
+Notes
+
+    You don’t need to recreate the image. This keeps every package you’ve already installed.
+
+    Once this works, the libGL error: MESA-LOADER... nvidia-drm warnings should disappear or be harmless. The real proof is the glxinfo -B renderer changing from llvmpipe to NVIDIA.
+
+    Next time, Option A (commit container → re-run with --runtime=nvidia and mounts) is cleaner, but you’re good sticking with this approach.
+ 
 
