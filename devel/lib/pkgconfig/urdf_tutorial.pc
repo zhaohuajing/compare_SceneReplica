@@ -1,0 +1,8 @@
+prefix=/root/compare_SceneReplica/devel
+
+Name: urdf_tutorial
+Description: Description of urdf_tutorial
+Version: 0.5.1
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
